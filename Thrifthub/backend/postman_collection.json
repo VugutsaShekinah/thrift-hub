@@ -1,0 +1,290 @@
+{
+  "info": {
+    "name": "ThriftHub KE API",
+    "description": "Postman collection for the ThriftHub KE backend. Set {{base_url}} to http://localhost:8000/api. Run 'Login' first — its test script saves {{access_token}} for subsequent requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000/api" },
+    { "key": "access_token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/auth/register/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane@example.com\",\n  \"password\": \"StrongPass123!\",\n  \"phone_number\": \"+254712345678\",\n  \"first_name\": \"Jane\",\n  \"last_name\": \"Doe\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.access) { pm.collectionVariables.set('access_token', data.access); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/auth/login/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane@example.com\",\n  \"password\": \"StrongPass123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh Token (uses cookie)",
+          "request": { "method": "POST", "url": "{{base_url}}/auth/token/refresh/" }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/auth/logout/"
+          }
+        },
+        {
+          "name": "Request Password Reset",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/auth/password-reset/",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"jane@example.com\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Accounts",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/accounts/me/"
+          }
+        },
+        {
+          "name": "List My Addresses",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/accounts/addresses/"
+          }
+        },
+        {
+          "name": "Create Address",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/accounts/addresses/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Home\",\n  \"recipient_name\": \"Jane Doe\",\n  \"phone_number\": \"+254712345678\",\n  \"county\": \"Nairobi\",\n  \"town\": \"Westlands\",\n  \"street_address\": \"Waiyaki Way\",\n  \"is_default\": true\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catalog",
+      "item": [
+        { "name": "List Categories", "request": { "method": "GET", "url": "{{base_url}}/catalog/categories/" } },
+        { "name": "List Products", "request": { "method": "GET", "url": "{{base_url}}/catalog/products/?ordering=-created_at" } },
+        { "name": "Get Product Detail", "request": { "method": "GET", "url": "{{base_url}}/catalog/products/levis-501-blue-jeans/" } },
+        { "name": "Related Products", "request": { "method": "GET", "url": "{{base_url}}/catalog/products/levis-501-blue-jeans/related/" } },
+        { "name": "Product Reviews", "request": { "method": "GET", "url": "{{base_url}}/catalog/products/levis-501-blue-jeans/reviews/" } },
+        {
+          "name": "Create Product (staff)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/catalog/products/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Nike Windbreaker\",\n  \"category\": 1,\n  \"selling_price_kes\": \"2000.00\",\n  \"quantity\": 3\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inventory (staff)",
+      "item": [
+        {
+          "name": "Low Stock",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/inventory/low-stock/"
+          }
+        },
+        {
+          "name": "List Stock Movements",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/inventory/stock-movements/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Checkout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/orders/checkout/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [{ \"product_id\": 1, \"quantity\": 1 }],\n  \"payment_method\": \"mpesa\",\n  \"address_id\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "List My Orders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/orders/"
+          }
+        },
+        {
+          "name": "Get Order Detail",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/orders/TH-0000000000/"
+          }
+        },
+        {
+          "name": "Update Order Status (staff)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/orders/TH-0000000000/status/",
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"processing\"\n}" }
+          }
+        },
+        {
+          "name": "Validate Coupon",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/orders/coupons/validate/",
+            "body": { "mode": "raw", "raw": "{\n  \"code\": \"WELCOME10\",\n  \"subtotal\": \"2000.00\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Engagement",
+      "item": [
+        {
+          "name": "List Wishlist",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/engagement/wishlist/"
+          }
+        },
+        {
+          "name": "Add to Wishlist",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/engagement/wishlist/",
+            "body": { "mode": "raw", "raw": "{\n  \"product_id\": 1\n}" }
+          }
+        },
+        {
+          "name": "Create Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/engagement/reviews/",
+            "body": { "mode": "raw", "raw": "{\n  \"product_id\": 1,\n  \"rating\": 5,\n  \"comment\": \"Great fit!\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics & Audit (staff/admin)",
+      "item": [
+        {
+          "name": "Sales Analytics",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/analytics/sales/?period=30d"
+          }
+        },
+        {
+          "name": "Inventory Analytics",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/analytics/inventory/"
+          }
+        },
+        {
+          "name": "Supplier Performance",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/analytics/suppliers/"
+          }
+        },
+        {
+          "name": "Audit Logs (admin only)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/audit/logs/"
+          }
+        }
+      ]
+    }
+  ]
+}
