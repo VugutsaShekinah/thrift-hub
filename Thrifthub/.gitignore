@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.Python
+backend/.venv/
+backend/venv/
+backend/staticfiles/
+backend/media/
+*.sqlite3
+
+# Django
+backend/**/migrations/__pycache__/
+db.sqlite3
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+npm-debug.log*
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Docker
+*.pid
+
+# Logs
+*.log
+logs/
+
+# Test/coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Stray empty nested repo (no commits, no files) left over from an earlier
+# aborted scaffold attempt; excluded rather than deleted since the OS
+# currently has a lock on it.
+/thrift-hub/
