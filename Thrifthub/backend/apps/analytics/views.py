@@ -6,6 +6,7 @@ from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.accounts.models import User
 from apps.catalog.models import Product, Supplier
 from apps.core.permissions import IsStaff
 from apps.orders.models import Order, OrderItem
@@ -95,6 +96,52 @@ class InventoryAnalyticsView(APIView):
                 "sold_out_count": Product.objects.filter(quantity=0).count(),
                 "total_stock_value_kes": stock_value,
                 "by_category": list(by_category),
+            }
+        )
+
+
+class CustomerAnalyticsView(APIView):
+    """Customer-level view alongside SalesAnalyticsView's order-level view:
+    how many customers there are, how many are new in the period, how many
+    are repeat buyers, and who the top spenders are. Repeat customers are
+    approximated as customers who have any two non-cancelled orders (not
+    windowed to `period`, since "repeat" is a lifetime trait, not a
+    per-period one)."""
+
+    permission_classes = [IsStaff]
+
+    def get(self, request):
+        period = request.query_params.get("period", "30d")
+        customers = User.objects.filter(role=User.Role.CUSTOMER)
+        total_customers = customers.count()
+
+        new_customers = total_customers
+        if period in PERIOD_DAYS:
+            since = timezone.now() - timedelta(days=PERIOD_DAYS[period])
+            new_customers = customers.filter(created_at__gte=since).count()
+
+        active_orders = Order.objects.exclude(status=Order.Status.CANCELLED)
+        per_customer = active_orders.values("user").annotate(order_count=Count("id"))
+        repeat_customers = per_customer.filter(order_count__gte=2).count()
+
+        top_customers = (
+            active_orders.values("user__id", "user__email", "user__first_name", "user__last_name")
+            .annotate(
+                total_spent_kes=Coalesce(
+                    Sum("total_kes"), 0, output_field=DecimalField(max_digits=12, decimal_places=2)
+                ),
+                order_count=Count("id"),
+            )
+            .order_by("-total_spent_kes")[:10]
+        )
+
+        return Response(
+            {
+                "period": period,
+                "total_customers": total_customers,
+                "new_customers": new_customers,
+                "repeat_customers": repeat_customers,
+                "top_customers": list(top_customers),
             }
         )
 

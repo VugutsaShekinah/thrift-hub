@@ -32,9 +32,11 @@ export default function AdminAnalyticsPage() {
   const [sales, setSales] = useState(null);
   const [inventory, setInventory] = useState(null);
   const [suppliers, setSuppliers] = useState(null);
+  const [customers, setCustomers] = useState(null);
 
   useEffect(() => {
     analyticsApi.sales(period).then((res) => setSales(res.data));
+    analyticsApi.customers(period).then((res) => setCustomers(res.data));
   }, [period]);
 
   useEffect(() => {
@@ -150,6 +152,47 @@ export default function AdminAnalyticsPage() {
                   <td className="py-2">{c.category_name || "Uncategorized"}</td>
                   <td className="py-2">{c.product_count}</td>
                   <td className="py-2 text-right">{formatKES(c.stock_value_kes)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      )}
+
+      {customers && (
+        <Card className="overflow-x-auto p-5">
+          <h2 className="mb-3 font-semibold">Customer Analytics</h2>
+          <div className="mb-4 grid grid-cols-3 gap-4">
+            <div>
+              <p className="text-xs text-neutral-500">Total Customers</p>
+              <p className="text-lg font-bold">{customers.total_customers}</p>
+            </div>
+            <div>
+              <p className="text-xs text-neutral-500">New This Period</p>
+              <p className="text-lg font-bold">{customers.new_customers}</p>
+            </div>
+            <div>
+              <p className="text-xs text-neutral-500">Repeat Customers</p>
+              <p className="text-lg font-bold">{customers.repeat_customers}</p>
+            </div>
+          </div>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-neutral-500">
+                <th className="pb-2">Customer</th>
+                <th className="pb-2">Orders</th>
+                <th className="pb-2 text-right">Total Spent</th>
+              </tr>
+            </thead>
+            <tbody>
+              {customers.top_customers.map((c) => (
+                <tr key={c["user__id"]} className="border-t border-neutral-100 dark:border-neutral-800">
+                  <td className="py-2">
+                    {c["user__first_name"]} {c["user__last_name"]}
+                    <span className="ml-1 text-neutral-500">({c["user__email"]})</span>
+                  </td>
+                  <td className="py-2">{c.order_count}</td>
+                  <td className="py-2 text-right">{formatKES(c.total_spent_kes)}</td>
                 </tr>
               ))}
             </tbody>
